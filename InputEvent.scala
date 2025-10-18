@@ -1,26 +1,14 @@
 package org.polyvariant.macropad4s
 
-import cats.effect.ExitCode
-import cats.effect.IO
-import cats.effect.IOApp
-import cats.effect.Resource
-import fs2.Chunk
-import fs2.Stream
-import fs2.io.file.{Files, FileHandle}
-import fs2.text
-import java.io.FileDescriptor
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.nio.file.Path
-import java.nio.file.Paths
-import scala.scalanative.unsafe.*
-import scala.concurrent.duration.*
-import fs2.io.writeOutputStream
-import fs2.io.readInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import InputEventCodes.*
 
-case class InputEvent(sec: Long, usec: Long, eventType: Int, code: Int, value: Int)
+// See https://www.kernel.org/doc/Documentation/input/input.txt section 5. Eventinterface
+case class InputEvent(sec: Long, usec: Long, eventType: Int, code: Int, value: Int) {
+  val isKeyPress = eventType == EV_KEY && value == 1
+  val isKeyRelease = eventType == EV_KEY && value == 0 
+}
 
 object InputEvent {
   val EventSize = 24 // bytes on 64-bit Linux
