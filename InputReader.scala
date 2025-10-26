@@ -25,13 +25,7 @@ object InputReader {
 
       val events: Stream[IO, InputEvent] =
         raw.chunkN(EventSize, allowFewer = false).map { chunk =>
-          val buf = ByteBuffer.wrap(chunk.toArray).order(ByteOrder.LITTLE_ENDIAN)
-          val sec   = buf.getLong()
-          val usec  = buf.getLong()
-          val tpe   = buf.getShort() & 0xffff
-          val code  = buf.getShort() & 0xffff
-          val value = buf.getInt()
-          InputEvent(sec, usec, tpe, code, value)
+          InputEvent.fromBytes(chunk.toArray)
         }
 
       (fd, events)

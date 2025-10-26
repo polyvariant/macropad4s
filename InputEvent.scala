@@ -12,14 +12,15 @@ case class InputEvent(sec: Long, usec: Long, eventType: Int, code: Int, value: I
 
 object InputEvent {
   val EventSize = 24 // bytes on 64-bit Linux
-
-  def toBytes(ev: InputEvent): Array[Byte] = {
-    val buf = ByteBuffer.allocate(EventSize).order(ByteOrder.LITTLE_ENDIAN)
-    buf.putLong(ev.sec)
-    buf.putLong(ev.usec)
-    buf.putShort(ev.eventType.toShort)
-    buf.putShort(ev.code.toShort)
-    buf.putInt(ev.value)
-    buf.array()
+ 
+  def fromBytes(bytes: Array[Byte]) = {
+    val buf = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
+    val sec   = buf.getLong()
+    val usec  = buf.getLong()
+    val tpe   = buf.getShort() & 0xffff
+    val code  = buf.getShort() & 0xffff
+    val value = buf.getInt()
+    InputEvent(sec, usec, tpe, code, value)
   }
+    
 }

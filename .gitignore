@@ -1,2 +1,6 @@
 App
 org.polyvariant.macropad4s.App
+.scala-build
+.vscode
+.metals
+.bsp
