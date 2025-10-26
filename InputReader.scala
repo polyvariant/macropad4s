@@ -1,34 +1,30 @@
 package org.polyvariant.macropad4s
 
-import cats.effect.IO
-import cats.effect.Resource
+import cats.effect.{IO, Resource}
 import fs2.Stream
 import fs2.io.readInputStream
 
-import java.io.FileDescriptor
-import java.io.FileInputStream
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import java.io.{FileDescriptor, FileInputStream}
 import java.nio.file.Path
+import org.polyvariant.macropad4s.InputEvent.EventSize
 
 object InputReader {
 
-  val EventSize = InputEvent.EventSize
-
+  /** Open a device file and return its FileDescriptor along with a stream of InputEvents. */
   def openDevice(path: Path): Resource[IO, (FileDescriptor, Stream[IO, InputEvent])] =
     for {
-      fis <- Resource.fromAutoCloseable(IO(new FileInputStream(path.toFile)))
-      fd = fis.getFD
-    } yield {
-      val raw: Stream[IO, Byte] =
-        readInputStream(IO.pure(fis), chunkSize = EventSize, closeAfterUse = false)
+      fis <- fileInputStream(path)
+      fd   = fis.getFD
+    } yield (fd, inputEvents(fis))
 
-      val events: Stream[IO, InputEvent] =
-        raw.chunkN(EventSize, allowFewer = false).map { chunk =>
-          InputEvent.fromBytes(chunk.toArray)
-        }
+  private def fileInputStream(path: Path) =
+    Resource.fromAutoCloseable(IO(new FileInputStream(path.toFile)))
 
-      (fd, events)
-    }
+  private def inputEvents(fis: FileInputStream) =
+    rawBytes(fis)
+      .chunkN(EventSize, allowFewer = false)
+      .map(chunk => InputEvent.fromBytes(chunk.toArray))
 
+  private def rawBytes(fis: FileInputStream) =
+    readInputStream(IO.pure(fis), chunkSize = EventSize, closeAfterUse = false)
 }

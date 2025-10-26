@@ -9,10 +9,12 @@ import cats.effect.IO
 import cats.effect.IOApp
 import InputEventCodes.*
 
+// Find path with VENDOR="514c"; PRODUCT="8851"; for ev in /dev/input/event*; do udevadm info -q property -n "$ev" | grep -q "ID_VENDOR_ID=${VENDOR}" && udevadm info -q property -n "$ev" | grep -q "ID_MODEL_ID=${PRODUCT}" && echo "$ev"; done
+
 object App extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
-    // Find with VENDOR="514c"; PRODUCT="8851"; for ev in /dev/input/event*; do udevadm info -q property -n "$ev" | grep -q "ID_VENDOR_ID=${VENDOR}" && udevadm info -q property -n "$ev" | grep -q "ID_MODEL_ID=${PRODUCT}" && echo "$ev"; done
+    
     val defaultPath = "/dev/input/event11"
     val path = args.headOption.getOrElse(defaultPath)
 

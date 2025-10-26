@@ -37,6 +37,9 @@ object Grabber {
     posix.sys.ioctl.ioctl(fileDescriptor.value.get, EVIOCGRAB, grabValue)
   }
 
+  def resource(fileDescriptor: FileDescriptor): Resource[IO, Int] = 
+    Resource.make(Grabber.grab(fileDescriptor))(_ => Grabber.release(fileDescriptor).void)
+
   extension (fd: FileDescriptor) {
     // File descriptor doesn't give access to the int value
     // but leaks it in toString: FileDescriptor(33, readOnly=true)
