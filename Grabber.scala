@@ -13,7 +13,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.scalanative.unsafe.*
+// import scala.scalanative.unsafe.*
 import scala.concurrent.duration.*
 import fs2.io.writeOutputStream
 import fs2.io.readInputStream
@@ -21,20 +21,22 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 object Grabber {
-  import scala.scalanative.posix
-  private val EVIOCGRAB: CLongInt = 0x40044590
+  // import scala.scalanative.posix
+  // private val EVIOCGRAB: CLongInt = 0x40044590
 
   def grab(fileDescriptor: FileDescriptor): IO[Int] = IO.delay {
-    val grabValue = stackalloc[Byte]()  // Allocate space for a CByte
-    !grabValue = 1.toByte  // Set the value of the allocated memory to 1
-    posix.sys.ioctl.ioctl(fileDescriptor.value.get, EVIOCGRAB, grabValue)
+    1
+    // val grabValue = stackalloc[Byte]()  // Allocate space for a CByte
+    // !grabValue = 1.toByte  // Set the value of the allocated memory to 1
+    // posix.sys.ioctl.ioctl(fileDescriptor.value.get, EVIOCGRAB, grabValue)
   }
 
 
   def release(fileDescriptor: FileDescriptor): IO[Int] = IO.delay {
-    val grabValue = stackalloc[Byte]()  // Allocate space for a CByte
-    !grabValue = 0.toByte  // Set the value of the allocated memory to 0
-    posix.sys.ioctl.ioctl(fileDescriptor.value.get, EVIOCGRAB, grabValue)
+    1
+    // val grabValue = stackalloc[Byte]()  // Allocate space for a CByte
+    // !grabValue = 0.toByte  // Set the value of the allocated memory to 0
+    // posix.sys.ioctl.ioctl(fileDescriptor.value.get, EVIOCGRAB, grabValue)
   }
 
   extension (fd: FileDescriptor) {

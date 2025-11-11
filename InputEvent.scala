@@ -10,7 +10,10 @@ case class InputEvent(sec: Long, usec: Long, eventType: Int, code: Int, value: I
   val isKeyRelease = eventType == EV_KEY && value == 0 
 }
 
+import cats.Show
+
 object InputEvent {
+  given Show[InputEvent] = x => s"Event(${x.eventType}, ${x.code}, ${x.value})"
   val EventSize = 24 // bytes on 64-bit Linux
 
   def toBytes(ev: InputEvent): Array[Byte] = {
@@ -22,4 +25,5 @@ object InputEvent {
     buf.putInt(ev.value)
     buf.array()
   }
+
 }
