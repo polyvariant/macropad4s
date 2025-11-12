@@ -8,6 +8,9 @@ import InputEventCodes.*
 import aquascape.*
 import cats.effect.*
 import fs2.*
+import scala.concurrent.duration.*
+import cats.Show
+import cats.syntax.all.*
 
 object App extends AquascapeApp {
 
@@ -15,7 +18,7 @@ object App extends AquascapeApp {
 
   def stream(using Scape[IO]): IO[Unit] = {
     // Find with VENDOR="514c"; PRODUCT="8851"; for ev in /dev/input/event*; do udevadm info -q property -n "$ev" | grep -q "ID_VENDOR_ID=${VENDOR}" && udevadm info -q property -n "$ev" | grep -q "ID_MODEL_ID=${PRODUCT}" && echo "$ev"; done
-    val path = "/dev/input/event23"
+    val path = "/dev/input/event7"
 
     Macropad
       .make(path)
@@ -23,11 +26,12 @@ object App extends AquascapeApp {
       .use { stream =>
         println("ready!")
         stream
-          // .evalTap(event => IO.println(s"Found event: $event"))
-          .stage("Macropad events")
-          .evalMap(handleEvent)
-          .stage("Process event")
-          .take(9)
+          .stage("Macropad events", "upstream")
+          .groupWithin(Int.MaxValue, 1.second)
+          .fork("root", "upstream")
+          .evalMap(handleEvents)
+          .stage("Process events")
+          .take(2)
           .compile
           .drain
           .compileStage("Result stream")
@@ -35,6 +39,19 @@ object App extends AquascapeApp {
       }
 
   }
+
+  given Show[Chunk[InputEvent]] = _ => "[events...]"
+  // given Show[Chunk[InputEvent]] = _.toList.map(_.show).mkString("[", ", ", "]")
+
+  private def handleEvents(evs: Chunk[InputEvent])(using Scape[IO]): IO[String] = {
+    println(evs)
+    if(evs.toList.exists(isVolUp)) volumeUp.as("Volume up!")
+    else if(evs.toList.exists(isVolDown)) volumeDown.as("Volume down!")
+    else IO.unit.as("Ignored")
+  }
+
+  private def isVolUp(ev: InputEvent) = ev.isKeyPress && ev.code == KEY_3
+  private def isVolDown(ev: InputEvent) = ev.isKeyPress && ev.code == KEY_1
 
   private def handleEvent(ev: InputEvent)(using Scape[IO]): IO[String] = {
     if (ev.isKeyPress && ev.code == KEY_1) {
